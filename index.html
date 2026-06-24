@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YUNUS Portfolio</title>
+    
+    <!-- 引入極簡幾何黑體與等寬字型 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500&family=Azeret+Mono:wght@200;300&display=swap" rel="stylesheet">
+
+    <!-- 
+      當您在自己電腦上開發時，直接把 style.css 放在與 index.html 同一個目錄下。
+      此引入樣式表能無縫接軌！
+    -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 紙張物理質感顆粒感 -->
+    <div class="noise-overlay"></div>
+
+    <!-- 雙重畫布 -->
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="fg-canvas"></canvas>
+
+    <!-- 精緻手繪感自動鉛筆游標 -->
+    <div id="custom-pencil">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 28L28 4L26 2L2 26V28H4Z" stroke="#1a1a1a" stroke-width="1.2" fill="#ffffff" />
+            <path d="M22 6L26 10" stroke="#1a1a1a" stroke-width="1" />
+            <path d="M2 26L5 25" stroke="#1a1a1a" stroke-width="1.2" />
+            <path d="M2 26L3 29" stroke="#1a1a1a" stroke-width="1.2" />
+            <path d="M2 26L4 27V28H2V26Z" fill="#1a1a1a" />
+        </svg>
+    </div>
+
+    <!-- 經典 3/7 版面 -->
+    <div class="layout-container">
+        
+        <!-- 左側資訊欄 (30% Width) -->
+        <aside class="info-sidebar">
+            <div class="sticky-content">
+                <h1 class="copyable-text">YUNUS</h1>
+                <p class="category copyable-text">Design & Brand</p>
+                
+                <!-- 互動命令打字區 -->
+                <div class="console-entry">
+                    <div class="console-line">
+                        <span class="console-prompt">></span>
+                        <div class="console-display-container">
+                            <input type="text" id="hidden-input" autofocus autocomplete="off" spellcheck="false">
+                            <span class="typed-text" id="typed-text"></span>
+                            <span class="cursor-blink"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- 命令處理反饋 -->
+                    <div class="system-feedback" id="system-feedback"></div>
+                    
+                    <!-- 智慧低調提示：當用戶輸入錯誤滿 3 次時緩緩顯示 -->
+                    <div class="suggest-hint" id="suggest-hint">
+                        提示: 請試著輸入 [作品]、[關於] 或 [聯絡] 來探索，或輸入 [首頁] 回歸。
+                    </div>
+                </div>
+
+                <!-- 清除筆刷按鈕 -->
+                <button class="clear-brush-btn" id="clear-btn">Clear Artwork</button>
+            </div>
+
+            <!-- 時間秩序 -->
+            <div id="digital-clock" class="copyable-text">00:00:00</div>
+        </aside>
+
+        <!-- 右側展示面板 (70% Width) -->
+        <main class="image-gallery">
+            
+            <!-- 初始鎖定介面 (🔒) -->
+            <section id="portal-locked" class="portal-view active-portal">
+                <div class="locked-indicator">
+                    <svg class="lock-svg" width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="5" y="10" width="14" height="11" rx="2" stroke="#1a1a1a" stroke-width="1.2" />
+                        <path d="M8 10V7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7V10" stroke="#1a1a1a" stroke-width="1.2" stroke-linecap="round"/>
+                    </svg>
+                    <div class="lock-text copyable-text">YUNUS.</div>
+                    <div class="lock-subtext copyable-text">鍵入指令以探索空間。</div>
+                </div>
+            </section>
+
+            <!-- A. 作品集展示頁面 (Works Page) -->
+            <section id="portal-works" class="portal-view">
+                <!-- 01 / 02 / 03 / 04 頂級極簡分頁器 -->
+                <div class="works-pagination">
+                    <span class="page-num active-page" data-page="1">01
+</span>
+                    <span class="page-divider">/</span>
+                    <span class="page-num" data-page="2">02</span>
+                    <span class="page-divider">/</span>
+                    <span class="page-num" data-page="3">03</span>
+                    <span class="page-divider">/</span>
+                    <span class="page-num" data-page="4">04</span>
+                </div>
+
+                <!-- 分頁切換容器 -->
+                <div class="works-page-container">
+                    
+                    <!-- 分頁 1：極簡混凝土建築 -->
+                    <div class="works-page active-page-content" id="page-1">
+                        <div class="case-study">
+
+                            <header class="case-header">
+                                <span class="case-tag">Project 01</span>
+
+                                <h2 class="case-main-title">
+                                    17+ 一起 Chill
+                                </h2>
+
+                                <p class="case-subtitle">
+                                    青年政治參與推廣活動視覺識別系統設計
+                                </p>
+
+                                <div class="case-meta-grid copyable-text">
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">CLIENT</span>
+                                        <span class="meta-value">台灣民眾黨</span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">YEAR</span>
+                                        <span class="meta-value">2023</span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">SERVICES</span>
+                                        <span class="meta-value">
+                                            Visual Identity / Campaign Design
+                                        </span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">ROLE</span>
+                                        <span class="meta-value">
+                                            Visual Designer
+                                        </span>
+                                    </div>
+
+                                </div>
+                            </header>
+
+                            <div class="photo-frame hero-frame">
+                                <img
+                                    src="img/17chill-cover.jpg"
+                                    alt="17+一起 Chill 主視覺">
+                            </div>
+
+                            <section class="case-section copyable-text">
+                                <h3 class="section-title">
+                                    專案背景
+                                    <span>｜青年公共參與的全新溝通方式</span>
+                                </h3>
+
+                                <p class="section-text">
+                                    「17+一起 Chill」是台灣民眾黨國家治理學院推動的青年公共參與實驗，
+                                    以尚未取得投票權的青年族群作為主要溝通對象。
+                                    活動結合喜劇表演、動漫文化與網路世代熟悉的語言，
+                                    嘗試降低政治議題的距離感，
+                                    讓公共事務不再侷限於嚴肅討論，
+                                    而能以更自然的方式進入青年生活。
+                                </p>
+                            </section>
+
+                            <section class="case-section copyable-text">
+                                <h3 class="section-title">
+                                    專案策略
+                                    <span>｜以青年文化重塑政治活動形象</span>
+                                </h3>
+
+                                <ul class="strategy-list">
+
+                                    <li>
+                                        <strong>降低參與門檻：</strong>
+                                        以娛樂活動包裝公共議題，
+                                        減少傳統政治宣傳的距離感。
+                                    </li>
+
+                                    <li>
+                                        <strong>青年文化導向：</strong>
+                                        融合動漫、喜劇與網路迷因元素，
+                                        建立符合 Z 世代閱讀習慣的視覺語言。
+                                    </li>
+
+                                    <li>
+                                        <strong>一致化視覺系統：</strong>
+                                        建立主視覺、社群素材與現場輸出規範，
+                                        提升活動辨識度與傳播效率。
+                                    </li>
+
+                                </ul>
+                            </section>
+
+                            <section class="case-section text-image-split copyable-text">
+
+                                <div class="split-text">
+
+                                    <h3 class="section-title">
+                                        創意亮點
+                                        <span>｜青年世代的視覺語言轉譯</span>
+                                    </h3>
+
+                                    <ol class="highlights-list">
+
+                                        <li>
+                                            <strong>次文化視覺融合：</strong>
+                                            結合漫畫分鏡、網路文化與娛樂符號，
+                                            建立具有青年感的活動識別。
+                                        </li>
+
+                                        <li>
+                                            <strong>高辨識度字體設計：</strong>
+                                            透過粗體字與撞色配置，
+                                            提升遠距離閱讀與活動宣傳效果。
+                                        </li>
+
+                                        <li>
+                                            <strong>模組化應用系統：</strong>
+                                            同一套設計可延伸至海報、
+                                            社群貼文、舞台背板與活動物料。
+                                        </li>
+
+                                    </ol>
+
+                                </div>
+
+                                <div class="photo-frame side-frame">
+                                    <img
+                                        src="img/17chill-detail-1.jpg"
+                                        alt="17+一起 Chill 延伸設計">
+                                </div>
+
+                            </section>
+
+                            <section class="case-section copyable-text">
+
+                                <h3 class="section-title">
+                                    專案成果
+                                    <span>｜建立青年導向的公共參與品牌形象</span>
+                                </h3>
+
+                                <p class="section-text">
+                                    本專案成功建立活動整體視覺識別系統，
+                                    並應用於實體活動現場、社群宣傳與數位媒體曝光。
+                                    透過年輕化的視覺策略，
+                                    將公共議題轉化為更容易接觸與理解的內容，
+                                    提升活動關注度與青年參與意願。
+                                </p>
+
+                            </section>
+
+                        </div>
+                    </div>
+
+                    <!-- 分頁 2：纖維與光影顆粒 -->
+                    <div class="works-page" id="page-2">
+                        <div class="case-study">
+
+                            <header class="case-header">
+                                <span class="case-tag">Project 02</span>
+
+                                <h2 class="case-main-title">
+                                    雲騰網絡 CloudWings
+                                </h2>
+
+                                <p class="case-subtitle">
+                                    CIS 與企業官網整合設計
+                                </p>
+
+                                <div class="case-meta-grid copyable-text">
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">CLIENT</span>
+                                        <span class="meta-value">
+                                            雲騰網路科技股份有限公司
+                                        </span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">YEAR</span>
+                                        <span class="meta-value">
+                                            2025
+                                        </span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">SERVICES</span>
+                                        <span class="meta-value">
+                                            Visual Identity / Web Design
+                                        </span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">ROLE</span>
+                                        <span class="meta-value">
+                                            Brand Designer
+                                        </span>
+                                    </div>
+
+                                </div>
+                            </header>
+
+                            <div class="photo-frame hero-frame">
+                                <img
+                                    src="img/cloudwing-cover.png"
+                                    alt="CloudWings Cover">
+                            </div>
+
+                            <section class="case-section copyable-text">
+
+                                <h3 class="section-title">
+                                    專案背景
+                                    <span>｜建立兼具專業性與延展性的品牌系統</span>
+                                </h3>
+
+                                <p class="section-text">
+                                    雲騰網絡是一間以雲端技術與系統整合為核心的企業，
+                                    品牌標語「雲端智慧，騰耀未來」不僅代表技術創新，
+                                    也象徵企業在快速變動的數位環境中，
+                                    持續提供穩定且可靠的服務。
+                                    本專案以此為核心，
+                                    從企業識別到官方網站進行整合設計，
+                                    建立一套可長期使用並持續擴展的品牌系統。
+                                </p>
+
+                            </section>
+
+                            <section class="case-section copyable-text">
+
+                                <h3 class="section-title">
+                                    專案策略
+                                    <span>｜以流動與連結作為品牌核心語言</span>
+                                </h3>
+
+                                <ul class="strategy-list">
+
+                                    <li>
+                                        <strong>動態品牌識別：</strong>
+                                        以雲朵流動形態結合無限符號結構，
+                                        形成具有循環性與方向感的品牌標誌，
+                                        象徵資料流動、系統整合與持續成長。
+                                    </li>
+
+                                    <li>
+                                        <strong>資訊架構整合：</strong>
+                                        將企業服務、技術優勢與品牌精神串聯，
+                                        透過清晰的資訊層級提升閱讀效率。
+                                    </li>
+
+                                    <li>
+                                        <strong>降低科技距離感：</strong>
+                                        透過留白與柔和色彩節奏，
+                                        讓專業技術內容更容易被理解與接受。
+                                    </li>
+
+                                </ul>
+
+                            </section>
+
+                            <section class="case-section text-image-split copyable-text">
+
+                                <div class="split-text">
+
+                                    <h3 class="section-title">
+                                        創意亮點
+                                        <span>｜讓技術品牌更具溫度與辨識度</span>
+                                    </h3>
+
+                                    <ol class="highlights-list">
+
+                                        <li>
+                                            <strong>無限符號識別：</strong>
+                                            將品牌核心概念轉化為可持續延伸的視覺系統。
+                                        </li>
+
+                                        <li>
+                                            <strong>漸層色彩策略：</strong>
+                                            融合藍、橘、紫三種色系，
+                                            呈現科技、創新與連結的品牌印象。
+                                        </li>
+
+                                        <li>
+                                            <strong>一致化數位體驗：</strong>
+                                            CIS 與網站同步建立，
+                                            提升品牌在不同媒介上的一致性。
+                                        </li>
+
+                                    </ol>
+
+                                </div>
+
+                                <div class="photo-frame side-frame">
+                                    <img
+                                        src="img/cloudwing-1.jpg"
+                                        alt="CloudWings Identity">
+                                </div>
+
+                            </section>
+
+                            <section class="case-section copyable-text">
+
+                                <h3 class="section-title">
+                                    專案成果
+                                    <span>｜從識別到網站的整合品牌建構</span>
+                                </h3>
+
+                                <p class="section-text">
+                                    專案完成企業識別系統與官方網站建置，
+                                    建立完整且具延展性的品牌基礎。
+                                    透過一致的視覺語言與數位介面設計，
+                                    強化企業形象的專業度與辨識度，
+                                    並為未來產品推廣與服務擴展保留彈性。
+                                </p>
+
+                            </section>
+
+                            <section class="case-section">
+
+                                <div class="photo-frame hero-frame">
+                                    <img
+                                        src="img/cloudwing-2.png"
+                                        alt="CloudWings Website">
+                                </div>
+
+                            </section>
+
+                            <section class="case-section">
+
+                                <div class="photo-frame hero-frame">
+                                    <img
+                                        src="img/cloudwing-3.png"
+                                        alt="CloudWings Branding">
+                                </div>
+
+                            </section>
+
+                        </div>
+                    </div>
+
+                    <!-- 分頁 3：無風水面抽象 -->
+                    <div class="works-page" id="page-3">
+                        <div class="case-study">
+
+                            <header class="case-header">
+                                <span class="case-tag">Project 03</span>
+
+                                <h2 class="case-main-title">
+                                    愛呦喂呀
+                                </h2>
+
+                                <p class="case-subtitle">
+                                    40種我愛你的模樣｜親情互動卡片設計
+                                </p>
+
+                                <div class="case-meta-grid copyable-text">
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">CLIENT</span>
+                                        <span class="meta-value">
+                                            畢業專題 / 放視大賞參賽作品
+                                        </span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">YEAR</span>
+                                        <span class="meta-value">
+                                            2026
+                                        </span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">SERVICES</span>
+                                        <span class="meta-value">
+                                            Editorial Design / Illustration / Interaction Design
+                                        </span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">ROLE</span>
+                                        <span class="meta-value">
+                                            Concept Development / Illustration Design
+                                        </span>
+                                    </div>
+
+                                </div>
+                            </header>
+
+                            <div class="photo-frame hero-frame">
+                                <img
+                                    src="img/ohmylove-cover.jpg"
+                                    alt="愛呦喂呀">
+                            </div>
+
+                            <section class="case-section copyable-text">
+
+                                <h3 class="section-title">
+                                    專案背景
+                                    <span>｜重新看見藏在行為裡的愛</span>
+                                </h3>
+
+                                <p class="section-text">
+                                    在台灣家庭文化中，
+                                    愛往往不是透過言語表達，
+                                    而是藏在日常生活的細節之中。
+                                    根據前期問卷調查，
+                                    多數受訪者極少聽過家人直接說出「我愛你」，
+                                    但卻能從留飯、叮嚀、陪伴與照顧等行為中感受到關心。
+                                    本專案希望透過設計，
+                                    將這些容易被忽略的情感轉化為具體且可感知的互動體驗，
+                                    讓使用者重新理解親情中的愛。
+                                </p>
+
+                            </section>
+
+                            <section class="case-section copyable-text">
+
+                                <h3 class="section-title">
+                                    專案策略
+                                    <span>｜將抽象情感轉化為互動體驗</span>
+                                </h3>
+
+                                <ul class="strategy-list">
+
+                                    <li>
+                                        <strong>情感資料轉譯：</strong>
+                                        從 5,000 份以上問卷中整理親情關鍵字，
+                                        將陪伴、碎念、煮飯、關心等行為轉化為卡片主題。
+                                    </li>
+
+                                    <li>
+                                        <strong>互動式閱讀體驗：</strong>
+                                        結合拉動、翻折、展開等紙張結構，
+                                        讓使用者透過操作感受情感的流動與變化。
+                                    </li>
+
+                                    <li>
+                                        <strong>降低表達門檻：</strong>
+                                        提供不依賴言語的情感溝通媒介，
+                                        讓家庭成員能以更自然的方式傳遞關心。
+                                    </li>
+
+                                </ul>
+
+                            </section>
+
+                            <section class="case-section text-image-split copyable-text">
+
+                                <div class="split-text">
+
+                                    <h3 class="section-title">
+                                        創意亮點
+                                        <span>｜40種愛的行為語言</span>
+                                    </h3>
+
+                                    <ol class="highlights-list">
+
+                                        <li>
+                                            <strong>40款互動卡片設計：</strong>
+                                            將台灣家庭常見的情感表達方式轉化為具象插畫與互動機關。
+                                        </li>
+
+                                        <li>
+                                            <strong>紙張媒材結合體驗設計：</strong>
+                                            打破傳統卡片的單向閱讀模式，
+                                            讓情感透過操作被重新感知。
+                                        </li>
+
+                                        <li>
+                                            <strong>文化觀察轉譯：</strong>
+                                            從台灣人含蓄的情感表達文化出發，
+                                            建立具在地特色的設計語言。
+                                        </li>
+
+                                    </ol>
+
+                                </div>
+
+                                <div class="photo-frame side-frame">
+                                    <img
+                                        src="img/ohmylove-2.jpg"
+                                        alt="愛呦喂呀卡片設計">
+                                </div>
+
+                            </section>
+
+                            <section class="case-section copyable-text">
+
+                                <h3 class="section-title">
+                                    專案成果
+                                    <span>｜讓愛被重新看見</span>
+                                </h3>
+
+                                <p class="section-text">
+                                    最終完成 40 款互動卡片與系列包裝設計，
+                                    並參與放視大賞等設計競賽展出。
+                                    作品不僅是一套卡片，
+                                    更是一個重新理解家庭情感的媒介。
+                                    透過設計介入，
+                                    讓原本難以說出口的關心，
+                                    能以更溫柔且具體的方式被感受與傳遞。
+                                </p>
+
+                            </section>
+
+                            <section class="case-section">
+                                <div class="photo-frame hero-frame">
+                                    <img
+                                        src="img/ohmylove-3.jpg"
+                                        alt="愛呦喂呀應用展示">
+                                </div>
+                            </section>
+
+                            <section class="case-section">
+                                <div class="photo-frame hero-frame">
+                                    <img
+                                        src="img/ohmylove-4.jpg"
+                                        alt="愛呦喂呀互動展示">
+                                </div>
+                            </section>
+
+                            <section class="case-section">
+                                <div class="photo-frame hero-frame">
+                                    <img
+                                        src="img/ohmylove-5.jpeg"
+                                        alt="愛呦喂呀情境拍攝">
+                                </div>
+                            </section>
+
+                        </div>
+                    </div>
+
+                    <!-- 分頁 4：人像黑色剪影 -->
+                    <div class="works-page" id="page-4">
+                        <div class="case-study">
+
+                            <header class="case-header">
+                                <span class="case-tag">Project 04</span>
+
+                                <h2 class="case-main-title">
+                                    興農集團企業識別再設計
+                                </h2>
+
+                                <p class="case-subtitle">
+                                    Sinon Corporation Brand Identity Redesign Proposal
+                                </p>
+
+                                <div class="case-meta-grid copyable-text">
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">CLIENT</span>
+                                        <span class="meta-value">
+                                            學生設計提案 / 興農集團企業識別再設計
+                                        </span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">YEAR</span>
+                                        <span class="meta-value">
+                                            2024
+                                        </span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">SERVICES</span>
+                                        <span class="meta-value">
+                                            Brand Identity / Visual System Design
+                                        </span>
+                                    </div>
+
+                                    <div class="meta-item">
+                                        <span class="meta-label">ROLE</span>
+                                        <span class="meta-value">
+                                            Brand Designer
+                                        </span>
+                                    </div>
+
+                                </div>
+                            </header>
+
+                            <div class="photo-frame hero-frame">
+                                <img
+                                    src="img/sinon-cover.png"
+                                    alt="Sinon Corporation">
+                            </div>
+
+                            <section class="case-section copyable-text">
+
+                                <h3 class="section-title">
+                                    專案背景
+                                    <span>｜傳統農業品牌的現代化轉譯</span>
+                                </h3>
+
+                                <p class="section-text">
+                                    興農集團自 1955 年創立以來，
+                                    已從農藥產銷企業發展為橫跨肥料、生物科技、
+                                    特用化學品、食品、家庭用品與精緻農業等多元事業體系。
+                                    本提案以品牌識別更新為核心，
+                                    希望在保留企業深厚歷史與農業根基的同時，
+                                    建立更符合現代市場與國際化發展需求的品牌形象，
+                                    使企業價值能透過更清晰且一致的視覺語言被傳達。
+                                </p>
+
+                            </section>
+
+                            <section class="case-section copyable-text">
+
+                                <h3 class="section-title">
+                                    設計策略
+                                    <span>｜從土地、生長與永續出發</span>
+                                </h3>
+
+                                <ul class="strategy-list">
+
+                                    <li>
+                                        <strong>農業意象重構：</strong>
+                                        將田埂、農作物與日出元素進行幾何化整理，
+                                        建立具有現代感的品牌符號。
+                                    </li>
+
+                                    <li>
+                                        <strong>提升辨識效率：</strong>
+                                        簡化原有識別結構，
+                                        使標誌在數位媒體與實體應用上皆能保持清晰辨識。
+                                    </li>
+
+                                    <li>
+                                        <strong>建立永續品牌印象：</strong>
+                                        透過綠色與金黃色彩系統，
+                                        傳達土地、生產與企業成長循環的核心精神。
+                                    </li>
+
+                                </ul>
+
+                            </section>
+
+                            <section class="case-section text-image-split copyable-text">
+
+                                <div class="split-text">
+
+                                    <h3 class="section-title">
+                                        創意亮點
+                                        <span>｜農業文化的當代品牌語言</span>
+                                    </h3>
+
+                                    <ol class="highlights-list">
+
+                                        <li>
+                                            <strong>日出意象：</strong>
+                                            上方圓弧象徵旭日東昇，
+                                            代表企業持續成長與未來展望。
+                                        </li>
+
+                                        <li>
+                                            <strong>田埂結構：</strong>
+                                            下方交織線條取自農田紋理，
+                                            展現企業與土地的深厚連結。
+                                        </li>
+
+                                        <li>
+                                            <strong>模組化識別系統：</strong>
+                                            建立色彩、字體與延伸規範，
+                                            提升品牌在不同媒介上的一致性。
+                                        </li>
+
+                                    </ol>
+
+                                </div>
+
+                                <div class="photo-frame side-frame">
+                                    <img
+                                        src="img/sinon-2.png"
+                                        alt="Sinon Identity">
+                                </div>
+
+                            </section>
+
+                            <section class="case-section copyable-text">
+
+                                <h3 class="section-title">
+                                    專案成果
+                                    <span>｜建立更具現代感的企業形象</span>
+                                </h3>
+
+                                <p class="section-text">
+                                    本提案完成品牌標誌重塑、
+                                    色彩規範建立與基礎應用系統設計，
+                                    透過簡潔且具有農業識別性的圖形語言，
+                                    將興農集團長期累積的企業價值重新轉譯，
+                                    建立兼具傳承性與未來性的品牌樣貌，
+                                    為企業數位化與國際化發展提供更完整的視覺基礎。
+                                </p>
+
+                            </section>
+
+                            <section class="case-section">
+
+                                <div class="photo-frame hero-frame">
+                                    <img
+                                        src="img/sinon-3.png"
+                                        alt="Sinon Brand Application">
+                                </div>
+
+                            </section>
+
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- B. 關於頁面 (Philosophy Page - Pure text, No Images) -->
+            <section id="portal-info" class="portal-view">
+
+                <div class="about-layout">
+
+                    <div class="text-portal-wrapper copyable-text">
+
+                        <h2>About Yunus</h2>
+
+                        <p>
+                            【品牌定位 × 內容行銷 × 視覺整合】
+                        </p>
+
+                        <p>
+                            擁有4年品牌行銷與視覺整合經驗，
+                            擅長從品牌定位、內容策略到視覺系統建立一致的品牌溝通架構，
+                            並結合創意素材與成效行銷策略推動品牌增長。
+                            曾參與公共議題傳播與新創品牌建立，
+                            具備從內容、設計到廣告投放的整合經驗。
+                        </p>
+
+                    </div>
+
+                    <div class="about-photo">
+                        <img src="img/me.png" alt="Yunus">
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- C. 聯絡頁面 (Connect Page - Pure text, No Images) -->
+            <section id="portal-connect" class="portal-view">
+                <div class="text-portal-wrapper copyable-text">
+                    <h2>CONNECT</h2>
+                    <ul class="contact-list">
+                        <li>EMAIL &nbsp;&middot;&nbsp; <a href="mailto:Nipahh@pm.me">Nipahh@pm.me</a></li>
+                        <li>INSTAGRAM &nbsp;&middot;&nbsp; <a href="https://www.instagram.com/uuzdesign/" target="_blank">@uuzdesign</a></li>
+                        <li>BEHANCE &nbsp;&middot;&nbsp; <a href="https://www.behance.net/yunus_zhang" target="_blank">@yunus_zhang</a></li>
+                    </ul>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // ==========================================================================
+        // 【網頁前端與動態繪圖核心控制腳本】
+        // ==========================================================================
+
+        // --- 1. 取得 DOM 節點引用 ---
+        const inputField = document.getElementById('hidden-input');
+        const typedTextEl = document.getElementById('typed-text');
+        const feedbackEl = document.getElementById('system-feedback');
+        const hintEl = document.getElementById('suggest-hint');
+        const clearBtn = document.getElementById('clear-btn');
+        const pencilCursor = document.getElementById('custom-pencil');
+
+        let commandHistory = [];
+        let invalidCount = 0; // 紀錄使用者打錯指令次數，達到閥值後漸顯引導提示
+
+        // 智慧型多組關鍵字字典 (完美中英同調匹配)
+        const KEYWORDS = {
+            works: ['work', 'works', 'portfolio', 'project', 'projects', '作品', '作品集', '工作', '創作', '專案'],
+            info: ['info', 'about', 'bio', 'introducing', '關於', '介紹', '資訊', '簡介', '自我介紹'],
+            connect: ['connect', 'contact', 'email', 'instagram', '聯絡', '聯繫', '聯絡途徑', '信箱', '社交'],
+            home: ['home', '首頁', 'reset', 'clear', 'pristine', '初始', '主頁', '鎖']
+        };
+
+        // --- 2. 雙重畫布渲染引擎 (Dual Canvas Render Engine) ---
+        const bgCanvas = document.getElementById('bg-canvas');
+        const fgCanvas = document.getElementById('fg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        const fgCtx = fgCanvas.getContext('2d');
+
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let hue = 210; // 起始色彩 (優雅莫蘭迪藍系)
+
+        // 自動響應畫布寬高大小
+        function resizeCanvases() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+            fgCanvas.width = window.innerWidth;
+            fgCanvas.height = window.innerHeight;
+            
+            clearCanvas();
+        }
+
+        // 一鍵拭淨底色
+        function clearCanvas() {
+            bgCtx.fillStyle = '#ffffff';
+            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+            fgCtx.clearRect(0, 0, fgCanvas.width, fgCanvas.height);
+        }
+
+        window.addEventListener('resize', resizeCanvases);
+        window.addEventListener('load', resizeCanvases);
+
+        // 智慧防觸發機制：滑動到文字/連結/分頁/輸入框時，暫停繪圖，利於使用者進行文字選取與點擊
+        function canDrawHere(target) {
+            const tag = target.tagName.toLowerCase();
+            const isSelectableText = ['h1', 'h2', 'h3', 'p', 'span', 'a', 'button', 'input'].includes(tag) || target.closest('.copyable-text') || target.closest('.works-pagination');
+            return !isSelectableText;
+        }
+
+        // 開始手稿繪製
+        function startDrawing(e) {
+            if (!canDrawHere(e.target)) return;
+            isDrawing = true;
+            const x = e.clientX || (e.touches && e.touches[0].clientX);
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            lastX = x;
+            lastY = y;
+            
+            if (pencilCursor) {
+                pencilCursor.classList.add('active'); // 產生寫字傾斜壓感
+            }
+        }
+
+        // 鋼筆雙重軌跡漫射
+        function draw(e) {
+            updatePencilPosition(e);
+            if (!isDrawing) return;
+
+            const x = e.clientX || (e.touches && e.touches[0].clientX);
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+
+            // 前景層：極細淡色細線 (0.08 透明灰色草稿筆觸)
+            fgCtx.beginPath();
+            fgCtx.moveTo(lastX, lastY);
+            fgCtx.lineTo(x, y);
+            fgCtx.strokeStyle = 'rgba(80, 80, 80, 0.08)'; 
+            fgCtx.lineWidth = 0.8;
+            fgCtx.lineCap = 'round';
+            fgCtx.stroke();
+
+            // 背景層：高斯模糊漸變渲染 (透過外層 blur(95px) 融合成高畫質液態流光)
+            bgCtx.beginPath();
+            bgCtx.moveTo(lastX, lastY);
+            bgCtx.lineTo(x, y);
+            
+            // 隨機在優雅色系間滑順偏移
+            hue = (hue + 0.5) % 360;
+            bgCtx.strokeStyle = `hsla(${hue}, 85%, 78%, 0.16)`; 
+            bgCtx.lineWidth = 140; // 高擴散度光暈筆刷
+            bgCtx.lineCap = 'round';
+            bgCtx.lineJoin = 'round';
+            bgCtx.stroke();
+
+            lastX = x;
+            lastY = y;
+        }
+
+        // 結束繪圖
+        function stopDrawing() {
+            isDrawing = false;
+            if (pencilCursor) {
+                pencilCursor.classList.remove('active');
+            }
+        }
+
+        // --- 3. 自訂自動鉛筆游標追蹤與智慧藏退 ---
+        function updatePencilPosition(e) {
+            if (!pencilCursor) return;
+            const x = e.clientX;
+            const y = e.clientY;
+            
+            // 當游標移動至可選取文字或按鈕時，暫時隱藏自訂筆，還原為系統指標
+            if (e.target && !canDrawHere(e.target)) {
+                pencilCursor.style.display = 'none';
+            } else {
+                pencilCursor.style.display = 'block';
+                pencilCursor.style.left = `${x}px`;
+                pencilCursor.style.top = `${y}px`;
+            }
+        }
+
+        // 註冊滑鼠繪圖監聽
+        window.addEventListener('mousedown', startDrawing);
+        window.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', stopDrawing);
+        window.addEventListener('mouseleave', stopDrawing);
+
+        // 完美支持行動端/觸控螢幕手動手繪 (阻斷預設滾動以實現繪圖)
+        window.addEventListener('touchstart', (e) => {
+            if (canDrawHere(e.target)) {
+                e.preventDefault();
+            }
+            startDrawing(e);
+        }, { passive: false });
+        window.addEventListener('touchmove', (e) => {
+            if (isDrawing) {
+                e.preventDefault();
+            }
+            draw(e);
+        }, { passive: false });
+        window.addEventListener('touchend', stopDrawing);
+
+        // 一鍵抹除畫布藝術
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearCanvas();
+        });
+
+        // --- 4. 門戶控制系統與指令解析 (Portal Console Parser) ---
+        
+        // 點選左側隨時自動聚焦打字框，行動端亦可流暢召喚原生鍵盤
+        const infoSidebar = document.querySelector('.info-sidebar');
+        infoSidebar.addEventListener('click', (e) => {
+            if (e.target.tagName.toLowerCase() !== 'a' && e.target.tagName.toLowerCase() !== 'button') {
+                inputField.focus();
+            }
+        });
+
+        // 打字同步
+        inputField.addEventListener('input', () => {
+            typedTextEl.textContent = inputField.value;
+        });
+
+        // 提交指令
+        inputField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const command = inputField.value.trim().toLowerCase();
+                if (command.length > 0) {
+                    processCommand(command);
+                }
+                inputField.value = '';
+                typedTextEl.textContent = '';
+            }
+        });
+
+        // 指令匹配與比對
+        function processCommand(cmd) {
+            let foundPortal = null;
+
+            // 模糊搜尋關鍵字
+            for (const [portal, aliasList] of Object.entries(KEYWORDS)) {
+                if (aliasList.includes(cmd)) {
+                    foundPortal = portal;
+                    break;
+                }
+            }
+
+            if (foundPortal) {
+                switchPortal(foundPortal);
+                invalidCount = 0; // 重置計數
+                hintEl.classList.remove('visible'); // 隱藏提示
+            } else {
+                invalidCount++;
+                showErrorFeedback(cmd);
+                
+                // 連續輸入錯誤滿 3 次，優雅顯露系統教學提示
+                if (invalidCount >= 3) {
+                    hintEl.classList.add('visible');
+                }
+            }
+        }
+
+        // 門戶頁面切換控制
+        function switchPortal(portalId) {
+            feedbackEl.className = 'system-feedback feedback-success';
+            feedbackEl.textContent = `> SUCCESS: ENTERING "${portalId.toUpperCase()}"`;
+            
+            // 隱藏所有右側展間面板
+            const views = document.querySelectorAll('.portal-view');
+            views.forEach(v => v.classList.remove('active-portal'));
+
+            // 特殊邏輯：如果是首頁(home)，則切換回最初的 locked 狀態，保留神祕美感
+            const targetId = (portalId === 'home') ? 'portal-locked' : `portal-${portalId}`;
+            const targetPortal = document.getElementById(targetId);
+            
+            if (targetPortal) {
+                targetPortal.classList.add('active-portal');
+            }
+        }
+
+        // 錯誤指令提示
+        function showErrorFeedback(cmd) {
+            feedbackEl.className = 'system-feedback feedback-error';
+            feedbackEl.textContent = `> ERROR: "${cmd.toUpperCase()}" NOT FOUND`;
+            
+            // 3秒後自動消退，維持網頁潔白乾淨
+            setTimeout(() => {
+                if (feedbackEl.textContent.includes('ERROR')) {
+                    feedbackEl.textContent = '';
+                }
+            }, 3000);
+        }
+
+        // --- 5. 作品分頁藝廊機制 (Works Paginated System) ---
+        const pageButtons = document.querySelectorAll('.page-num');
+        const workPages = document.querySelectorAll('.works-page');
+
+        pageButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetPageNum = btn.getAttribute('data-page');
+
+                // 更新分頁按紐激活狀態
+                pageButtons.forEach(b => b.classList.remove('active-page'));
+                btn.classList.add('active-page');
+
+                // 切換對應分頁卡片顯示
+                workPages.forEach(p => p.classList.remove('active-page-content'));
+                const targetPage = document.getElementById(`page-${targetPageNum}`);
+                if (targetPage) {
+                    targetPage.classList.add('active-page-content');
+                }
+            });
+        });
+
+        // --- 6. 數位等寬時鐘同步 ---
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('digital-clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 預設對焦輸入
+        window.addEventListener('DOMContentLoaded', () => {
+            inputField.focus();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,748 @@
+/* ==========================================================================
+【1. 基礎重設與全域變數】
+========================================================================== */
+
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
+
+body {
+background-color: #ffffff;
+color: #1a1a1a;
+font-family: "Plus Jakarta Sans", "PingFang TC", "Microsoft JhengHei", -apple-system, sans-serif;
+overflow-x: hidden;
+min-height: 100vh;
+position: relative;
+cursor: none; /* 隱藏原生滑鼠，啟用自訂自動鉛筆 */
+}
+
+/* 確保當使用者選取文字或點擊元件時，游標轉換回預設狀態 */
+a, button, input, .copyable-text, h1, p, span, .works-pagination span {
+cursor: auto;
+}
+
+a, button, .works-pagination span {
+cursor: pointer;
+}
+
+/* ==========================================================================
+【2. 雙重繪圖畫布 (Canvas Layers)】
+========================================================================== /
+/* 背景高斯模糊畫布：渲染彩色高斯漫射光場 */
+#bg-canvas {
+position: fixed;
+top: 0;
+left: 0;
+width: 100vw;
+height: 100vh;
+z-index: -2;
+pointer-events: none;
+filter: blur(95px);
+opacity: 0.85;
+transform: scale(1.05); /* 輕微放大防止高斯模糊產生白邊邊緣 */
+}
+
+/* 前景鉛筆細線畫布：極淡極細的灰線軌跡，保留手稿溫度 */
+#fg-canvas {
+position: fixed;
+top: 0;
+left: 0;
+width: 100vw;
+height: 100vh;
+z-index: -1;
+pointer-events: none;
+opacity: 0.4;
+}
+
+/* 數位紙張噪點濾鏡疊加 */
+.noise-overlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+z-index: 100;
+pointer-events: none;
+}
+
+/*
+=====================================================
+【3. 自訂手感自動鉛筆游標】
+=====================================================
+*/
+#custom-pencil {
+position: fixed;
+width: 32px;
+height: 32px;
+pointer-events: none;
+z-index: 9999;
+transform: translate(-3px, -29px) rotate(0deg);
+transform-origin: 3px 29px; /* 定位點精準設在筆頭 */
+transition: transform 0.08s ease-out;
+display: none; / 滑鼠移動前預設隱藏 */
+}
+
+#custom-pencil.active {
+transform: translate(-3px, -29px) rotate(-15deg) scale(0.95); /* 點擊/繪圖時產生壓筆動效 */
+}
+
+@media (pointer: coarse) {
+/* 觸控裝置(如手機、平板)隱藏自訂游標，回歸原生觸控 */
+#custom-pencil {
+display: none !important;
+}
+body {
+cursor: auto !important;
+}
+}
+
+/* ==========================================================================
+【4. 經典 3/7 非對稱版面配置】
+========================================================================== */
+.layout-container {
+display: flex;
+min-height: 100vh;
+}
+
+/* 左側打字信紙區 (30% 寬度) */
+.info-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 30%;
+    height: 100vh;
+
+    padding: 80px 50px;
+
+    background-color: rgba(255,255,255,.88);
+    backdrop-filter: blur(15px);
+
+    border-right: 1px solid rgba(0,0,0,.03);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    z-index: 20;
+}
+
+.sticky-content h1 {
+font-size: 26px;
+letter-spacing: 6px;
+font-weight: 300;
+margin-bottom: 5px;
+}
+
+.category {
+font-size: 11px;
+color: #999;
+letter-spacing: 2px;
+text-transform: uppercase;
+margin-bottom: 60px;
+}
+
+/* ==========================================================================
+【5. 鍵入命令互動列】
+========================================================================== */
+.console-entry {
+margin-top: 40px;
+position: relative;
+}
+
+.console-line {
+display: flex;
+align-items: center;
+border-bottom: 1px solid #1a1a1a;
+padding-bottom: 8px;
+margin-bottom: 10px;
+}
+
+.console-prompt {
+font-family: 'Azeret Mono', monospace;
+font-size: 13px;
+color: #1a1a1a;
+margin-right: 12px;
+font-weight: 300;
+}
+
+.console-display-container {
+display: flex;
+align-items: center;
+flex-grow: 1;
+position: relative;
+}
+
+/* 隱形輸入框：專門用來流暢接收中文/英文輸入與完美的選字框定位 */
+#hidden-input {
+position: absolute;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+opacity: 0;
+border: none;
+outline: none;
+background: transparent;
+font-family: inherit;
+font-size: 14px;
+z-index: 5;
+}
+
+.typed-text {
+font-family: 'Plus Jakarta Sans', sans-serif;
+font-size: 14px;
+letter-spacing: 1.5px;
+color: #1a1a1a;
+font-weight: 400;
+min-height: 20px;
+line-height: 20px;
+pointer-events: none;
+white-space: pre-wrap;
+word-break: break-all;
+}
+
+.cursor-blink {
+display: inline-block;
+width: 2px;
+height: 15px;
+background-color: #1a1a1a;
+margin-left: 3px;
+animation: blink 0.8s infinite alternate;
+}
+
+@keyframes blink {
+0% { opacity: 1; }
+100% { opacity: 0; }
+}
+
+/* 系統動態回饋 */
+.system-feedback {
+font-size: 11px;
+letter-spacing: 1px;
+min-height: 16px;
+margin-top: 8px;
+transition: all 0.3s ease;
+}
+
+.feedback-error {
+color: #d9534f;
+}
+
+.feedback-success {
+color: #818cf8;
+}
+
+/* 智慧神祕提示 */
+.suggest-hint {
+font-size: 11px;
+color: #aaa;
+line-height: 1.6;
+margin-top: 15px;
+opacity: 0;
+transition: opacity 0.5s ease;
+pointer-events: none;
+}
+
+.suggest-hint.visible {
+opacity: 1;
+pointer-events: auto;
+}
+
+/* 極低調一鍵拭淨按鈕 */
+.clear-brush-btn {
+background: transparent;
+border: 1px solid rgba(0, 0, 0, 0.12);
+color: #888;
+padding: 6px 14px;
+font-size: 9px;
+letter-spacing: 2px;
+transition: all 0.3s ease;
+margin-top: 35px;
+text-transform: uppercase;
+font-family: 'Plus Jakarta Sans', sans-serif;
+border-radius: 20px;
+align-self: flex-start;
+}
+
+.clear-brush-btn:hover {
+border-color: #1a1a1a;
+color: #1a1a1a;
+background: rgba(0, 0, 0, 0.02);
+}
+
+/* 等寬時鐘 */
+#digital-clock {
+font-family: 'Azeret Mono', monospace;
+font-size: 12px;
+letter-spacing: 1px;
+color: #888;
+margin-top: 40px;
+}
+
+/* ==========================================================================
+【6. 右側作品展間 (Right-side 70% Portals)】
+========================================================================== */
+.image-gallery {
+width: 70%;
+margin-left: 30%;
+background-color: transparent;
+position: relative;
+display: flex;
+flex-direction: column;
+z-index: 5;
+}
+
+/* 展間門戶基礎設定與滑順淡入動畫 */
+.portal-view {
+width: 100%;
+min-height: 100vh;
+display: none;
+padding: 80px 60px;
+flex-direction: column;
+opacity: 0;
+transform: translateY(15px);
+transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.portal-view.active-portal {
+display: flex;
+opacity: 1;
+transform: translateY(0);
+}
+
+/* ==========================================================================
+【7. 初始鎖定介面 (Locked Landing View)】
+========================================================================== */
+#portal-locked {
+justify-content: center;
+align-items: center;
+text-align: center;
+}
+
+.locked-indicator {
+display: flex;
+flex-direction: column;
+align-items: center;
+animation: lock-breathe 4s infinite ease-in-out;
+}
+
+.lock-svg {
+margin-bottom: 25px;
+opacity: 0.85;
+}
+
+.lock-text {
+font-size: 13px;
+letter-spacing: 6px;
+color: #1a1a1a;
+font-weight: 300;
+text-transform: uppercase;
+margin-bottom: 8px;
+}
+
+.lock-subtext {
+font-size: 11px;
+letter-spacing: 1.5px;
+color: #bbb;
+font-weight: 300;
+}
+
+@keyframes lock-breathe {
+0%, 100% { transform: scale(1); opacity: 0.7; }
+50% { transform: scale(1.03); opacity: 1; }
+}
+
+/* ==========================================================================
+【8. 作品分頁藝廊 (Works Portal)】
+========================================================================== */
+.works-pagination {
+display: flex;
+align-items: center;
+gap: 20px;
+margin-bottom: 50px;
+font-family: 'Azeret Mono', monospace;
+font-size: 12px;
+user-select: none;
+}
+
+.page-num {
+color: #bbb;
+transition: color 0.3s;
+padding: 5px 10px;
+border-radius: 4px;
+}
+
+.page-num.active-page {
+color: #1a1a1a;
+font-weight: bold;
+background-color: rgba(0, 0, 0, 0.04);
+}
+
+.page-divider {
+color: #ddd;
+}
+
+/* 分頁內容切換動畫 */
+.works-page-container {
+position: relative;
+flex-grow: 1;
+min-height: 500px;
+}
+
+.works-page {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+display: none;
+opacity: 0;
+transform: translateX(10px);
+transition: opacity 0.5s ease, transform 0.5s ease;
+flex-direction: column;
+}
+
+.works-page.active-page-content {
+display: flex;
+opacity: 1;
+transform: translateX(0);
+position: relative;
+}
+
+/* ==========================================================================
+【9. 簡訊設計風格作品集排版結構 (SimpleInfo Case Study Style)】
+========================================================================== */
+.case-study {
+display: flex;
+flex-direction: column;
+gap: 60px;
+padding-bottom: 100px;
+}
+
+/* 作品頁首區域 */
+.case-header {
+border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+padding-bottom: 40px;
+}
+
+.case-tag {
+font-family: 'Azeret Mono', monospace;
+font-size: 10px;
+letter-spacing: 2px;
+color: #999;
+text-transform: uppercase;
+display: block;
+margin-bottom: 12px;
+}
+
+.case-main-title {
+font-size: 32px;
+font-weight: 400;
+letter-spacing: 4px;
+color: #1a1a1a;
+margin-bottom: 12px;
+line-height: 1.2;
+}
+
+.case-subtitle {
+font-size: 14px;
+color: #555;
+letter-spacing: 1px;
+margin-bottom: 40px;
+line-height: 1.6;
+font-weight: 300;
+}
+
+/* 經典四欄專案資訊表 */
+.case-meta-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 20px;
+}
+
+.meta-item {
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+
+.meta-label {
+font-family: 'Azeret Mono', monospace;
+font-size: 9px;
+letter-spacing: 1.5px;
+color: #aaa;
+font-weight: 300;
+}
+
+.meta-value {
+font-size: 12px;
+color: #1a1a1a;
+font-weight: 400;
+line-height: 1.4;
+}
+
+/* 巨幅專案主圖展示框 */
+.hero-frame {
+margin: 10px 0;
+}
+
+/* 各段落設計 */
+.case-section {
+padding: 10px 0;
+border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+}
+
+.case-section:last-child {
+border-bottom: none;
+}
+
+.section-title {
+font-size: 15px;
+font-weight: 500;
+letter-spacing: 2px;
+color: #1a1a1a;
+margin-bottom: 20px;
+display: flex;
+align-items: center;
+flex-wrap: wrap;
+gap: 12px;
+}
+
+.section-title span {
+font-size: 12px;
+color: #888;
+font-weight: 300;
+letter-spacing: 1px;
+}
+
+.section-text {
+font-size: 13px;
+color: #555;
+line-height: 1.82;
+letter-spacing: 1px;
+}
+
+/* 策略列表結構 */
+.strategy-list {
+list-style: none;
+display: flex;
+flex-direction: column;
+gap: 15px;
+}
+
+.strategy-list li {
+font-size: 13px;
+color: #555;
+line-height: 1.8;
+letter-spacing: 1px;
+}
+
+.strategy-list li strong {
+color: #1a1a1a;
+font-weight: 500;
+}
+
+/* 二欄式亮點分割結構 */
+.text-image-split {
+display: grid;
+grid-template-columns: 1.2fr 1fr;
+gap: 40px;
+align-items: center;
+}
+
+.split-text {
+display: flex;
+flex-direction: column;
+}
+
+.side-frame {
+width: 100%;
+}
+
+/* 創意亮點編號列表 */
+.highlights-list {
+list-style: none;
+counter-reset: highlight-counter;
+display: flex;
+flex-direction: column;
+gap: 15px;
+}
+
+.highlights-list li {
+position: relative;
+padding-left: 32px;
+font-size: 13px;
+color: #555;
+line-height: 1.8;
+letter-spacing: 1px;
+}
+
+.highlights-list li::before {
+counter-increment: highlight-counter;
+content: "0" counter(highlight-counter);
+position: absolute;
+left: 0;
+top: 0;
+font-family: 'Azeret Mono', monospace;
+font-size: 11px;
+font-weight: bold;
+color: #1a1a1a;
+}
+
+.highlights-list li strong {
+color: #1a1a1a;
+font-weight: 500;
+}
+
+.photo-frame {
+position: relative;
+width: 100%;
+overflow: hidden;
+background-color: #fafafa;
+box-shadow: 0 10px 40px rgba(0,0,0,0.02);
+border-radius: 4px;
+}
+
+.photo-frame img {
+width: 100%;
+height: auto;
+display: block;
+opacity: 0.93;
+transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.photo-frame:hover img {
+opacity: 1;
+transform: scale(1.01);
+}
+
+/* ==========================================================================
+【10. 關於與聯絡 (About & Connect Portals)】
+========================================================================== */
+.text-portal-wrapper {
+max-width: 600px;
+margin: auto 0;
+}
+
+.text-portal-wrapper h2 {
+font-size: 20px;
+letter-spacing: 4px;
+font-weight: 300;
+margin-bottom: 30px;
+text-transform: uppercase;
+}
+
+.text-portal-wrapper p {
+font-size: 13px;
+line-height: 2;
+color: #555;
+letter-spacing: 1.5px;
+margin-bottom: 25px;
+}
+
+.contact-list {
+list-style: none;
+margin-top: 40px;
+}
+
+.contact-list li {
+margin-bottom: 15px;
+font-size: 13px;
+letter-spacing: 1px;
+}
+
+.contact-list a {
+color: #1a1a1a;
+text-decoration: none;
+border-bottom: 1px solid #1a1a1a;
+padding-bottom: 2px;
+transition: all 0.3s;
+}
+
+.contact-list a:hover {
+color: #999;
+border-bottom-color: #999;
+}
+
+/* ==========================================================================
+【11. 響應式排版 (Mobile Responsive)】
+========================================================================== */
+@media (max-width: 900px) {
+.layout-container {
+flex-direction: column;
+}
+.info-sidebar {
+width: 100%;
+min-height: auto;
+padding: 50px 30px;
+}
+.image-gallery {
+width: 100%;
+min-height: auto;
+}
+.portal-view {
+padding: 50px 30px;
+min-height: auto;
+}
+.case-meta-grid {
+grid-template-columns: repeat(2, 1fr);
+gap: 15px;
+}
+.text-image-split {
+grid-template-columns: 1fr;
+gap: 20px;
+}
+.about-layout{
+    flex-direction:column;
+}
+
+.about-photo{
+    width:220px;
+}
+
+.info-sidebar{
+    position:relative;
+    width:100%;
+    height:auto;
+}
+
+.image-gallery{
+    width:100%;
+    margin-left:0;
+}
+}
+
+.about-layout{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:80px;
+
+    width:100%;
+    max-width:1200px;
+    margin:auto;
+}
+
+.about-layout .text-portal-wrapper{
+    flex:1;
+    max-width:650px;
+}
+
+.about-photo{
+    flex-shrink:0;
+    width:320px;
+}
+
+.about-photo img{
+    width:100%;
+    height:auto;
+    display:block;
+
+    border-radius:12px;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.08);
+}
